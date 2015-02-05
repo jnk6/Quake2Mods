@@ -288,6 +288,16 @@ void blaster_touch (edict_t *self, edict_t *other, cplane_t *plane, csurface_t *
 {
 	int		mod;
 
+	//spawn 6 grenades
+	int i;
+	vec3_t dir;
+	for (i =0; i <6; i=i+1){
+		dir[0] = crandom();
+		dir[1] = crandom();
+		dir[2] = crandom();
+		fire_grenade(self->owner, self -> s.origin, dir, 50, 40, 1.5 , 100);
+	}
+
 	if (other == self->owner)
 		return;
 
@@ -373,6 +383,8 @@ void fire_blaster (edict_t *self, vec3_t start, vec3_t dir, int damage, int spee
 }	
 
 
+
+
 /*
 =================
 fire_grenade
@@ -385,6 +397,8 @@ static void Grenade_Explode (edict_t *ent)
 
 	if (ent->owner->client)
 		PlayerNoise(ent->owner, ent->s.origin, PNOISE_IMPACT);
+
+	
 
 	//FIXME: if we are onground then raise our Z just a bit since we are a point?
 	if (ent->enemy)

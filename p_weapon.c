@@ -851,6 +851,7 @@ void Weapon_HyperBlaster_Fire (edict_t *ent)
 	float	rotation;
 	vec3_t	offset;
 	int		effect;
+	int		damage;
 
 	ent->client->weapon_sound = gi.soundindex("weapons/hyprbl1a.wav");
 
@@ -871,36 +872,49 @@ void Weapon_HyperBlaster_Fire (edict_t *ent)
 		}
 		else
 		{
-			// STEVE .... the lines below are new !
-			// ...........TRIPLE HYPER BLASTER !!!
+			rotation = (ent->client->ps.gunframe - 5) * 2*M_PI/6;
+			offset[0] = -4 * sin(rotation);
+			offset[1] = 0;
+			offset[2] = 4 * cos(rotation);
 
 			if ((ent->client->ps.gunframe == 6) || (ent->client->ps.gunframe == 9))
 				effect = EF_HYPERBLASTER;
 			else
 				effect = 0;
+			if (deathmatch->value)
+				damage = 15;
+			else
+				damage = 20;
+			Blaster_Fire (ent, offset, damage, true, effect);
 
-			// change the offset radius to 6 (from 4), spread the bolts out a little
-			rotation = (ent->client->ps.gunframe - 5) * 2*M_PI/6;
-			offset[0] = 0;
-			offset[1] = -8 * sin(rotation);
-			offset[2] = 8 * cos(rotation);
-			Blaster_Fire (ent, offset, 20, true, effect);
-
-			// fire a second blast at a different rotation
 			rotation = (ent->client->ps.gunframe - 5) * 2*M_PI/6 + M_PI*2.0/3.0;
-			offset[0] = 0;
-			offset[1] = -8 * sin(rotation);
-			offset[2] = 8 * cos(rotation);
-			Blaster_Fire (ent, offset, 20, true, effect);
+			offset[0] = -4 * sin(rotation);
+			offset[1] = 0;
+			offset[2] = 4 * cos(rotation);
 
-			// fire a third blast at a different rotation
+			Blaster_Fire (ent, offset, damage, true, effect);
+
 			rotation = (ent->client->ps.gunframe - 5) * 2*M_PI/6 + M_PI*4.0/3.0;
 			offset[0] = 0;
-			offset[1] = -8 * sin(rotation);
-			offset[2] = 8 * cos(rotation);
-			Blaster_Fire (ent, offset, 20, true, effect);
-			// deduct 3 times the amount of ammo as before (... the *3 on end)
-			ent->client->pers.inventory[ent->client->ammo_index] -= ent->client->pers.weapon->quantity * 3;
+			offset[1] = -4 * sin(rotation);
+			offset[2] = 4 * cos(rotation);
+
+			Blaster_Fire (ent, offset, damage, true, effect);
+
+			if (! ( (int)dmflags->value & DF_INFINITE_AMMO ) )
+				ent->client->pers.inventory[ent->client->ammo_index]-=3;
+
+			ent->client->anim_priority = ANIM_ATTACK;
+			if (ent->client->ps.pmove.pm_flags & PMF_DUCKED)
+			{
+				ent->s.frame = FRAME_crattak1 - 1;
+				ent->client->anim_end = FRAME_crattak9;
+			}
+			else
+			{
+				ent->s.frame = FRAME_attack1 - 1;
+				ent->client->anim_end = FRAME_attack8;
+			}
 		}
 
 		ent->client->ps.gunframe++;

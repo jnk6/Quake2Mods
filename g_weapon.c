@@ -104,6 +104,24 @@ qboolean fire_hit (edict_t *self, vec3_t aim, int damage, int kick)
 	return true;
 }
 
+/*
+=================
+melee_weapon
+=================
+*/
+
+static void melee_weapon (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int mod){
+	trace_t tr;
+	vec3_t dir;
+	vec3_t end;
+
+	tr = gi.trace(self->s.origin, NULL, NULL, start, self, MASK_SHOT);
+	if (tr.fraction == 1.0){
+
+		VectorMA(start, 500, aimdir, end);
+		tr = gi.trace (start, NULL, NULL, end, self, MASK_SHOT);
+	}
+} 
 
 /*
 =================

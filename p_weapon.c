@@ -732,6 +732,73 @@ void Weapon_GrenadeLauncher (edict_t *ent)
 /*
 ======================================================================
 
+NINJA SWORD
+high attack speed, medium damage 
+
+
+======================================================================
+*/
+
+void weapon_ninjasword_fire (edict_t *ent){
+
+	vec3_t start;
+	vec3_t forward, right;
+	vec3_t offset;
+	int damage = 50;
+	int kick = 180;
+
+	if (ent->client->ps.gunframe == 6){
+	
+		//play sound
+		ent->client->ps.gunframe++;
+		return;
+	
+	}
+
+	if (ent->client->ps.gunframe == 9){
+	
+		ent->client->ps.gunframe++;
+		return;
+	
+	}
+
+	AngleVectors(ent->client->v_angle, forward, right, NULL);
+
+	VectorScale(forward, -2, ent->client->kick_origin);
+	ent->client->kick_angles[0] = -2;
+
+	VectorSet(offset, 0, 8, ent->viewheight-8);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+
+	if (is_quad){
+		damage *= 4;
+		kick *=4;
+	}
+
+	fire_melee(ent, start, forward, 120, kick, damage, MOD_SHOTGUN);
+
+	//send muzzle flash
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_ROCKET_EXPLOSION_WATER);
+	gi.WritePosition(start);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+
+	ent->client->ps.gunframe++;
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+}
+
+void Weapon_NinjaSword(edict_t *ent){
+	static int pause_frames[] = { 34 , 51 , 59 , 0 };
+	static int fire_frames[] = { 6, 16, 0 };
+
+	Weapon_Generic (ent, 5, 16,  59, 64, pause_frames, fire_frames, weapon_ninjasword_fire);
+}
+
+
+/*
+======================================================================
+
 ROCKET
 
 ======================================================================

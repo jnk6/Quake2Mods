@@ -110,7 +110,7 @@ melee_weapon
 =================
 */
 
-static void melee_weapon (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int mod){
+void fire_melee (edict_t *self, vec3_t start, vec3_t aimdir, int length, int kick, int damage, int mod){
 	trace_t tr;
 	vec3_t dir;
 	vec3_t end;
@@ -118,8 +118,35 @@ static void melee_weapon (edict_t *self, vec3_t start, vec3_t aimdir, int damage
 	tr = gi.trace(self->s.origin, NULL, NULL, start, self, MASK_SHOT);
 	if (tr.fraction == 1.0){
 
-		VectorMA(start, 500, aimdir, end);
+		VectorMA(start, length, aimdir, end);
 		tr = gi.trace (start, NULL, NULL, end, self, MASK_SHOT);
+
+		if (tr.fraction < 1.0) {
+		
+			if (tr.ent-> takedamage){
+			
+				//the closer the enemy, the more kick they will receive
+				//also reduce the effect magnitude of this calculation to only 1/4
+				kick *= (0.75) + (1-tr.fraction)* (0.25);
+				damage *= (0.75) + tr.fraction * (0.25);
+
+				T_Damage(tr.ent,self,self,aimdir,tr.endpos,tr.plane.normal, damage, kick, 0, mod);
+
+			}
+		
+		}
+
+	}
+	if (tr.fraction < 1.0)
+	{
+		gi.WriteByte (svc_temp_entity);
+		gi.WriteByte (TE_GUNSHOT);
+		gi.WritePosition (tr.endpos);
+		gi.WriteDir (tr.plane.normal);
+		gi.multicast (tr.endpos, MULTICAST_PVS);
+
+		if (self->client)
+			PlayerNoise(self, tr.endpos, PNOISE_IMPACT);
 	}
 } 
 

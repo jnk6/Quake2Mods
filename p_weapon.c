@@ -890,7 +890,7 @@ void weapon_nunchuk_fire (edict_t *ent) {
 
 	//speed up attack rate (cannot be negative)
 	int skip_gunframes = 2;
-
+	/*interesting ~Brett*/
 	//5 is a fire frame. Skip firing on this fire frame, play your character attack sound and skip necessary frames
 	if (ent->client->ps.gunframe == 5){
 		//play sound
@@ -980,7 +980,7 @@ void weapon_ninjasword_fire (edict_t *ent){
 	
 	}
 
-	//What is the purpose of this?
+	//What is the purpose of this? /*I don't know, shouldn't you? ~Brett*/
 	if (ent->client->ps.gunframe == 9 ){
 	
 		ent->client->ps.gunframe++;

@@ -155,7 +155,8 @@ void fire_shiruken (edict_t *self, vec3_t start, vec3_t dir, int damage, int spe
 	trace_t	tr;
 
 	VectorNormalize (dir);
-
+	/*You could explain the following code a bit better, maybe change the word "bolt" to shiruken or something to see what happens."
+	Noticably based off of fire_blaster ~BRETT */
 	bolt = G_Spawn();
 	bolt->svflags = SVF_DEADMONSTER;
 	// yes, I know it looks weird that projectiles are deadmonsters
@@ -217,7 +218,7 @@ void fire_melee (edict_t *self, vec3_t start, vec3_t aimdir, int length, int kic
 		if (tr.fraction < 1.0) {
 		
 			if (tr.ent-> takedamage){
-			
+				/*Good explanation of the following code ~BRETT */
 				//the closer the enemy, the more kick they will receive
 				//also reduce the effect of this calculation to only 1/4 of base values
 				kick *= (0.75) + (1-tr.fraction)* (0.25);

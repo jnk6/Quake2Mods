@@ -698,16 +698,16 @@ void SV_Physics_Toss (edict_t *ent)
 
 	if (trace.fraction < 1)
 	{
-		
+		if (ent->movetype == MOVETYPE_FLYRICOCHET)
+		{
+			backoff =2;
+		}
+
 		if (ent->movetype == MOVETYPE_BOUNCE)
 			backoff = 1.5;
 		else
 			backoff = 1;
 
-		if (ent->movetype == MOVETYPE_FLYRICOCHET)
-		{
-			backoff =2;
-		}
 
 		ClipVelocity (ent->velocity, trace.plane.normal, ent->velocity, backoff);
 

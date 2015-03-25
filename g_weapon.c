@@ -136,7 +136,7 @@ void shiruken_touch (edict_t *self, edict_t *other, cplane_t *plane, csurface_t 
 	else
 	{
 		//prevent bullet death
-
+		return;
 		gi.WriteByte (svc_temp_entity);
 		gi.WriteByte (TE_BLASTER);
 		gi.WritePosition (self->s.origin);

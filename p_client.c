@@ -591,7 +591,7 @@ void InitClientPersistant (gclient_t *client)
 
 	memset (&client->pers, 0, sizeof(client->pers));
 
-	item = FindItem("Blaster");
+	item = FindItem("Shiruken");
 	client->pers.selected_item = ITEM_INDEX(item);
 	client->pers.inventory[client->pers.selected_item] = 1;
 
@@ -979,8 +979,6 @@ void respawn (edict_t *self)
 
 		return;
 	}
-
-	gi.bprintf(PRINT_MEDIUM, "I DIED !! ");
 	// restart the entire server
 	gi.AddCommandString ("menu_loadgame\n");
 }

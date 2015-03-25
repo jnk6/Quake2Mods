@@ -357,6 +357,8 @@ A generic function to handle the basics of weapon thinking
 #define FRAME_FIRE_FIRST		(FRAME_ACTIVATE_LAST + 1)
 #define FRAME_IDLE_FIRST		(FRAME_FIRE_LAST + 1)
 #define FRAME_DEACTIVATE_FIRST	(FRAME_IDLE_LAST + 1)
+#define CRIT_MULTIPLIER			(2)
+#define KICK_MULTIPLIER			(1.5)
 
 void Weapon_Generic (edict_t *ent, int FRAME_ACTIVATE_LAST, int FRAME_FIRE_LAST, int FRAME_IDLE_LAST, int FRAME_DEACTIVATE_LAST, int *pause_frames, int *fire_frames, void (*fire)(edict_t *ent))
 {
@@ -497,7 +499,8 @@ void Weapon_Generic (edict_t *ent, int FRAME_ACTIVATE_LAST, int FRAME_FIRE_LAST,
 			{
 				if (ent->client->quad_framenum > level.framenum)
 					gi.sound(ent, CHAN_ITEM, gi.soundindex("items/damage3.wav"), 1, ATTN_NORM, 0);
-
+				
+				gi.bprintf(PRINT_MEDIUM, "I AM FIRING WOOH gunframe: %i\n" , ent->client->ps.gunframe);
 				fire (ent);
 				break;
 			}
@@ -732,12 +735,227 @@ void Weapon_GrenadeLauncher (edict_t *ent)
 /*
 ======================================================================
 
-NINJA SWORD
-high attack speed, medium damage 
-
+Shiruken
+Medium damage, low kick. fast-attack speed. High Crit rate. Ranged, medium-range
 
 ======================================================================
 */
+
+void Shiruken_Fire (edict_t *ent, vec3_t g_offset, int damage, qboolean hyper, int effect){
+	vec3_t	forward, right;
+	vec3_t	start;
+	vec3_t	offset;
+
+	if (is_quad)
+		damage *= 4;
+	AngleVectors (ent->client->v_angle, forward, right, NULL);
+	VectorSet(offset, 24, 8, ent->viewheight-8);
+	VectorAdd (offset, g_offset, offset);
+	P_ProjectSource (ent->client, ent->s.origin, offset, forward, right, start);
+
+	VectorScale (forward, -2, ent->client->kick_origin);
+	ent->client->kick_angles[0] = -1;
+
+	fire_shiruken (ent, start, forward, damage, 1000, effect, hyper);
+
+	// send muzzle flash
+	gi.WriteByte (svc_muzzleflash);
+	gi.WriteShort (ent-g_edicts);
+	if (hyper)
+		gi.WriteByte (MZ_HYPERBLASTER | is_silenced);
+	else
+		gi.WriteByte (MZ_BLASTER | is_silenced);
+	gi.multicast (ent->s.origin, MULTICAST_PVS);
+
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+}
+
+void Weapon_Shiruken_Fire (edict_t *ent)
+{
+	int		damage;
+
+	if (deathmatch->value)
+		damage = 15;
+	else
+		damage = 10;
+	Shiruken_Fire (ent, vec3_origin, damage, false, EF_BLASTER);
+	ent->client->ps.gunframe++;
+}
+
+void Weapon_Shiruken (edict_t *ent)
+{
+	static int	pause_frames[]	= {19, 32, 0};
+	static int	fire_frames[]	= {5, 0};
+
+	Weapon_Generic (ent, 4, 8, 52, 55, pause_frames, fire_frames, Weapon_Shiruken_Fire);
+}
+
+
+
+/*
+======================================================================
+
+SCYTHE
+High damage, low kick. Slow-attack speed. High Crit rate. Induces bleeding(maybe). High Range
+
+======================================================================
+*/
+
+void weapon_scythe_fire (edict_t *ent){
+	vec3_t start;
+	vec3_t forward, right;
+	vec3_t offset;
+	
+	int const FRAME_FIRST_ATTACK = 18;
+	int damage = 90;
+	int kick = 70;
+	int range = 155;
+	int crit_rate = 0.37;
+
+	//speed up attack rate (cannot be negative)
+	int skip_gunframes = 0;
+
+	//Skip firing on this fire frame, play your character attack sound and skip necessary frames
+	if (ent->client->ps.gunframe == 8){
+		//play sound
+		ent->client->ps.gunframe += skip_gunframes;
+		ent->client->ps.gunframe++;
+		return;
+	}
+
+	AngleVectors(ent->client->v_angle, forward, right, NULL);
+
+	VectorScale(forward, -2, ent->client->kick_origin);
+	ent->client->kick_angles[0] = -2;
+
+	VectorSet(offset, 0, 8, ent->viewheight-8);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+
+	if (is_quad){
+		damage *= 4;
+		kick *=4;
+	}
+
+	if (crandom() < crit_rate){
+		damage *= CRIT_MULTIPLIER;
+		kick *= KICK_MULTIPLIER;
+	}
+
+
+	fire_melee(ent, start, forward, range, kick, damage, MOD_SHOTGUN);
+
+	//send muzzle flash
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_ROCKET_EXPLOSION_WATER);
+	gi.WritePosition(start);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+
+	ent->client->ps.gunframe++;
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+
+}
+
+//original: shotgun
+void Weapon_Scythe(edict_t *ent){
+
+	static int	pause_frames[]	= {22, 28, 34, 0};
+	static int	fire_frames[]	= {8, 21, 0};
+
+	Weapon_Generic (ent, 7, 21, 36, 39, pause_frames, fire_frames, weapon_scythe_fire);
+
+}
+
+/*
+======================================================================
+
+NUNCHUK
+strikes twice in a row, the first blow does low damage, low kick, while the second does higher damage and greater kick. Slow-attack speed.
+Low Crit rate.
+
+======================================================================
+*/
+
+void weapon_nunchuk_fire (edict_t *ent) {
+
+	vec3_t start;
+	vec3_t forward, right;
+	vec3_t offset;
+	
+	int const FRAME_FIRST_ATTACK = 15;
+	int damage = 30;
+	int kick = 120;
+	int range = 113;
+	int crit_rate = 0.05;
+
+	//speed up attack rate (cannot be negative)
+	int skip_gunframes = 2;
+
+	//5 is a fire frame. Skip firing on this fire frame, play your character attack sound and skip necessary frames
+	if (ent->client->ps.gunframe == 5){
+		//play sound
+		ent->client->ps.gunframe += skip_gunframes;
+		ent->client->ps.gunframe++;
+		return;
+	}
+
+	AngleVectors(ent->client->v_angle, forward, right, NULL);
+
+	VectorScale(forward, -2, ent->client->kick_origin);
+	ent->client->kick_angles[0] = -2;
+
+	VectorSet(offset, 0, 8, ent->viewheight-8);
+	P_ProjectSource(ent->client, ent->s.origin, offset, forward, right, start);
+
+	if (is_quad){
+		damage *= 4;
+		kick *=4;
+	}
+
+	if (crandom() < crit_rate){
+		damage *= CRIT_MULTIPLIER;
+		kick *= KICK_MULTIPLIER;
+	}
+
+	//modify the damage and kick of the first blow to only deal a partial amount
+	if (ent->client->ps.gunframe == FRAME_FIRST_ATTACK){
+		range *= 0.75;
+		kick *= 0.25;
+		damage *= 0.50;
+	}
+	fire_melee(ent, start, forward, range, kick, damage, MOD_SHOTGUN);
+
+	//send muzzle flash
+	gi.WriteByte(svc_temp_entity);
+	gi.WriteByte(TE_ROCKET_EXPLOSION_WATER);
+	gi.WritePosition(start);
+	gi.multicast(ent->s.origin, MULTICAST_PVS);
+
+
+	ent->client->ps.gunframe++;
+	PlayerNoise(ent, start, PNOISE_WEAPON);
+
+}
+
+//original: rocket launcher
+void Weapon_Nunchuk(edict_t *ent){
+	int pause_frames[] = { 25, 37, 50, 0};
+	int fire_frames[] = { 5, 15, 17, 0};
+
+	Weapon_Generic(ent, 4, 17, 50, 54, pause_frames, fire_frames, weapon_nunchuk_fire);
+
+}
+
+/*
+======================================================================
+
+NINJA SWORD
+standard melee weapon medium damage, fast attack speed.
+Medium crit rate.
+
+======================================================================
+*/
+
 
 void weapon_ninjasword_fire (edict_t *ent){
 
@@ -745,17 +963,25 @@ void weapon_ninjasword_fire (edict_t *ent){
 	vec3_t forward, right;
 	vec3_t offset;
 	int damage = 50;
+	int range = 120;
 	int kick = 180;
+	int crit_rate = 0.15;
+
+	//speed up attack rate
+	int skip_gunframes = 6;
+	
 
 	if (ent->client->ps.gunframe == 6){
-	
+		
 		//play sound
+		ent->client->ps.gunframe+= skip_gunframes;
 		ent->client->ps.gunframe++;
 		return;
 	
 	}
 
-	if (ent->client->ps.gunframe == 9){
+	//What is the purpose of this?
+	if (ent->client->ps.gunframe == 9 ){
 	
 		ent->client->ps.gunframe++;
 		return;
@@ -775,7 +1001,12 @@ void weapon_ninjasword_fire (edict_t *ent){
 		kick *=4;
 	}
 
-	fire_melee(ent, start, forward, 120, kick, damage, MOD_SHOTGUN);
+	if (crandom() < crit_rate){
+		damage *= CRIT_MULTIPLIER;
+		kick *= KICK_MULTIPLIER;
+	}
+
+	fire_melee(ent, start, forward, range, kick, damage, MOD_SHOTGUN);
 
 	//send muzzle flash
 	gi.WriteByte(svc_temp_entity);
@@ -788,10 +1019,13 @@ void weapon_ninjasword_fire (edict_t *ent){
 	PlayerNoise(ent, start, PNOISE_WEAPON);
 }
 
+//original: grenade launcher
 void Weapon_NinjaSword(edict_t *ent){
 	static int pause_frames[] = { 34 , 51 , 59 , 0 };
 	static int fire_frames[] = { 6, 16, 0 };
 
+	gi.bprintf(PRINT_MEDIUM, "hi, im Weapon_NinjaSword gunframe: %i\n", ent->client->ps.gunframe);
+	
 	Weapon_Generic (ent, 5, 16,  59, 64, pause_frames, fire_frames, weapon_ninjasword_fire);
 }
 

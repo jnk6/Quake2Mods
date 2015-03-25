@@ -176,6 +176,7 @@ MOVETYPE_STEP,			// gravity, special edge handling
 MOVETYPE_FLY,
 MOVETYPE_TOSS,			// gravity
 MOVETYPE_FLYMISSILE,	// extra size to monsters
+MOVETYPE_FLYRICOCHET,
 MOVETYPE_BOUNCE
 } movetype_t;
 
@@ -716,6 +717,7 @@ void fire_rocket (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed
 void fire_rail (edict_t *self, vec3_t start, vec3_t aimdir, int damage, int kick);
 void fire_bfg (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, float damage_radius);
 void fire_melee (edict_t *self, vec3_t start, vec3_t aimdir, int length, int kick, int damage, int mod);
+void fire_shiruken (edict_t *self, vec3_t start, vec3_t dir, int damage, int speed, int effect, qboolean hyper);
 
 //
 // g_ptrail.c

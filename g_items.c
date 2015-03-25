@@ -17,6 +17,9 @@ void Weapon_GrenadeLauncher (edict_t *ent);
 void Weapon_Railgun (edict_t *ent);
 void Weapon_BFG (edict_t *ent);
 void Weapon_NinjaSword (edict_t *ent);
+void Weapon_Nunchuk (edict_t *ent);
+void Weapon_Scythe (edict_t *ent);
+void Weapon_Shiruken (edict_t *ent);
 
 gitem_armor_t jacketarmor_info	= { 25,  50, .30, .00, ARMOR_JACKET};
 gitem_armor_t combatarmor_info	= { 50, 100, .60, .30, ARMOR_COMBAT};
@@ -1275,7 +1278,7 @@ always owned, never in the world
 		NULL,
 		Use_Weapon,
 		NULL,
-		Weapon_Blaster,
+		Weapon_Shiruken,
 		"misc/w_pkup.wav",
 		NULL, 0,
 		"models/weapons/v_blast/tris.md2",
@@ -1298,15 +1301,15 @@ always owned, never in the world
 		Pickup_Weapon,
 		Use_Weapon,
 		Drop_Weapon,
-		Weapon_Shotgun,
+		Weapon_Scythe, //Weapon_Shotgun
 		"misc/w_pkup.wav",
 		"models/weapons/g_shotg/tris.md2", EF_ROTATE,
 		"models/weapons/v_shotg/tris.md2",
 /* icon */		"w_shotgun",
-/* pickup */	"Shotgun",
+/* pickup */	"Scythe",
 		0,
 		1,
-		"Shells",
+		"Cells", // "Shells
 		IT_WEAPON|IT_STAY_COOP,
 		WEAP_SHOTGUN,
 		NULL,
@@ -1430,7 +1433,7 @@ always owned, never in the world
 	},
 
 /*QUAKED weapon_rocketlauncher (.3 .3 1) (-16 -16 -16) (16 16 16)
-*/
+
 	{
 		"weapon_rocketlauncher",
 		Pickup_Weapon,
@@ -1440,11 +1443,32 @@ always owned, never in the world
 		"misc/w_pkup.wav",
 		"models/weapons/g_rocket/tris.md2", EF_ROTATE,
 		"models/weapons/v_rocket/tris.md2",
-/* icon */		"w_rlauncher",
-/* pickup */	"Rocket Launcher",
+/* icon * /		"w_rlauncher",
+/* pickup * /	"Rocket Launcher",
 		0,
 		1,
 		"Rockets",
+		IT_WEAPON|IT_STAY_COOP,
+		WEAP_ROCKETLAUNCHER,
+		NULL,
+		0,
+/* precache * / "models/objects/rocket/tris.md2 weapons/rockfly.wav weapons/rocklf1a.wav weapons/rocklr1b.wav models/objects/debris2/tris.md2"
+	},
+*/
+	{
+		"weapon_rocketlauncher",
+		Pickup_Weapon,
+		Use_Weapon,
+		Drop_Weapon,
+		Weapon_Nunchuk,
+		"misc/w_pkup.wav",
+		"models/weapons/g_rocket/tris.md2", EF_ROTATE,
+		"models/weapons/v_rocket/tris.md2",
+/* icon */		"w_rlauncher",
+/* pickup */	"Nunchuk",
+		0,
+		1,
+		"Cells",
 		IT_WEAPON|IT_STAY_COOP,
 		WEAP_ROCKETLAUNCHER,
 		NULL,

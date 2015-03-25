@@ -980,6 +980,7 @@ void respawn (edict_t *self)
 		return;
 	}
 
+	gi.bprintf(PRINT_MEDIUM, "I DIED !! ");
 	// restart the entire server
 	gi.AddCommandString ("menu_loadgame\n");
 }
